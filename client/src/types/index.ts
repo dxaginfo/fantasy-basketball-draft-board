@@ -1,5 +1,16 @@
-// Player Types
+// User types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Player types
 export type PlayerPosition = 'PG' | 'SG' | 'SF' | 'PF' | 'C' | 'G' | 'F' | 'UTIL';
+
+export type InjuryStatus = 'Healthy' | 'Day-to-Day' | 'Out' | 'Injured Reserve' | 'Out for Season';
 
 export interface PlayerStats {
   points: number;
@@ -7,12 +18,12 @@ export interface PlayerStats {
   assists: number;
   steals: number;
   blocks: number;
-  threePointers: number;
+  threePointersMade: number;
   fieldGoalPercentage: number;
   freeThrowPercentage: number;
   turnovers: number;
-  minutes: number;
-  games: number;
+  gamesPlayed: number;
+  minutesPerGame: number;
 }
 
 export interface Player {
@@ -20,37 +31,59 @@ export interface Player {
   name: string;
   team: string;
   positions: PlayerPosition[];
-  stats: PlayerStats;
+  age: number;
+  height: string;
+  weight: number;
+  college?: string;
+  jerseyNumber?: string;
+  photoUrl?: string;
+  injuryStatus: InjuryStatus;
+  stats: {
+    current: PlayerStats;
+    projected: PlayerStats;
+    previousSeason?: PlayerStats;
+  };
   projectedRank: number;
-  adp: number;
-  tier: number;
-  injuryStatus: string;
-  notes: string;
-  lastUpdated: string;
+  averageDraftPosition: number;
+  positionScarcity: number;
 }
 
-// Draft Types
+// Draft types
+export interface DraftSettings {
+  teams: number;
+  rounds: number;
+  timePerPick: number;
+  serpentine: boolean;
+  positions: {
+    PG: number;
+    SG: number;
+    SF: number;
+    PF: number;
+    C: number;
+    G: number;
+    F: number;
+    UTIL: number;
+    Bench: number;
+  };
+  scoringSystem: 'standard' | 'points' | 'categories' | 'custom';
+  draftType: 'live' | 'mock' | 'autopick';
+}
+
 export interface DraftPick {
-  round: number;
-  pickNumber: number;
   playerId: string;
+  pickNumber: number;
+  round: number;
   timestamp: string;
 }
 
 export interface DraftTeam {
   id: string;
   name: string;
-  position: number;
-  owner: string;
+  owner?: string;
+  draftPosition: number;
   picks: DraftPick[];
-}
-
-export interface DraftSettings {
-  rounds: number;
-  teams: number;
-  timePerPick: number;
-  scoringFormat: 'standard' | 'points' | 'roto' | 'h2h' | 'custom';
-  serpentine: boolean;
+  isUser: boolean;
+  strategy?: string;
 }
 
 export interface CurrentPick {
@@ -62,23 +95,37 @@ export interface CurrentPick {
 export interface Draft {
   id: string;
   name: string;
-  user: string;
-  teams: DraftTeam[];
-  settings: DraftSettings;
-  status: 'scheduled' | 'in-progress' | 'completed';
-  currentPick: CurrentPick;
+  userId: string;
   createdAt: string;
   updatedAt: string;
+  settings: DraftSettings;
+  teams: DraftTeam[];
+  currentPick: CurrentPick;
+  isComplete: boolean;
 }
 
-// UI State Types
+// Mock Draft types
+export interface MockDraftStrategy {
+  id: string;
+  name: string;
+  description: string;
+  preferences: {
+    positions?: PlayerPosition[];
+    stats?: (keyof PlayerStats)[];
+    rookiePreference?: number;
+    riskTolerance?: number;
+    upside?: number;
+  };
+}
+
+// UI types
 export interface FilterConfig {
   positions: PlayerPosition[];
   teams: string[];
   searchTerm: string;
   minRank: number;
   maxRank: number;
-  injuryStatus: string[];
+  injuryStatus: InjuryStatus[];
 }
 
 export interface SortConfig {
@@ -86,51 +133,72 @@ export interface SortConfig {
   direction: 'ascending' | 'descending';
 }
 
-// Analysis Types
-export interface CategoryScore {
-  category: string;
-  value: number;
-  percentile: number;
-}
-
+// Analysis types
 export interface TeamAnalysis {
+  team: DraftTeam;
+  strengths: (keyof PlayerStats)[];
+  weaknesses: (keyof PlayerStats)[];
+  categoryRatings: Record<keyof PlayerStats, number>;
+  balanceScore: number;
+  upside: number;
+  risk: number;
+  positionalBalance: Record<PlayerPosition, number>;
+}
+
+export interface LeagueProjection {
   teamId: string;
-  categoryScores: CategoryScore[];
-  positionBreakdown: Record<PlayerPosition, number>;
-  weakestCategories: string[];
-  strongestCategories: string[];
-  balance: number; // 0-100 score for category balance
+  projectedPoints: number;
+  categoryRankings: Record<keyof PlayerStats, number>;
+  projectedStanding: number;
 }
 
-// Mock Draft Types
-export interface MockDraftStrategy {
+// Notification types
+export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+
+export interface Notification {
   id: string;
-  name: string;
-  description: string;
-  priorityCategories?: string[];
-  targetPositions?: PlayerPosition[];
-  preferYoung?: boolean;
-  preferVeterans?: boolean;
-  riskTolerance?: number; // 0-100
+  type: NotificationType;
+  message: string;
+  duration?: number;
+  dismissable?: boolean;
 }
 
-export interface MockDraftSettings extends DraftSettings {
-  strategies: Record<string, MockDraftStrategy>;
-  yourPosition: number;
-}
-
-// User Types
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// API Response Types
+// API Response types
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Form types
+export interface DraftSettingsFormData {
+  name: string;
+  teams: number;
+  rounds: number;
+  timePerPick: number;
+  serpentine: boolean;
+  positions: DraftSettings['positions'];
+  scoringSystem: DraftSettings['scoringSystem'];
+  draftType: DraftSettings['draftType'];
+}
+
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
