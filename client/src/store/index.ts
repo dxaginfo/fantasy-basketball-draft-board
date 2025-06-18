@@ -2,16 +2,16 @@ import { configureStore } from '@reduxjs/toolkit';
 import playersReducer from './slices/playersSlice';
 import draftReducer from './slices/draftSlice';
 import uiReducer from './slices/uiSlice';
-import userReducer from './slices/userSlice';
-import analysisReducer from './slices/analysisSlice';
+import mockDraftReducer from './slices/mockDraftSlice';
+import authReducer from './slices/authSlice';
 
 export const store = configureStore({
   reducer: {
     players: playersReducer,
     draft: draftReducer,
     ui: uiReducer,
-    user: userReducer,
-    analysis: analysisReducer
+    mockDraft: mockDraftReducer,
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
